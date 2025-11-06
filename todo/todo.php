@@ -17,14 +17,32 @@ $today_date = date("Y/m/d");
 foreach ($file_contents as $line) {
 
     $line = mb_convert_encoding($line, "UTF-8", "utf-8, sjis"); // 文字コードを UTF-8に変換
-
-    list($todo_date_str, $todo_title) = explode("\t", $line); // タブで区切る
-    $todo_date = date("Y/m/d", strtotime($todo_date_str));
-    if ($todo_date < $today_date) {
-        $todo_over_list[] = array("title" => $todo_title, "date" => $todo_date);
-    } else {
-        $todo_upcoming_list[] = array("title" => $todo_title, "date" => $todo_date);
+    
+    // ↓↓↓ 修正点1：行の前後にある空白や改行を削除する ↓↓↓
+    $trimmed_line = trim($line); 
+    
+    // ↓↓↓ 修正点2：もし空行だったら、このループをスキップする ↓↓↓
+    if (empty($trimmed_line)) {
+        continue; 
     }
+
+    // タブで区切る
+    $parts = explode("\t", $trimmed_line);
+
+    // ↓↓↓ 修正点3：タブで区切って2つの要素がある場合のみ処理する ↓↓↓
+    if (count($parts) == 2) {
+        $todo_date_str = $parts[0];
+        $todo_title = $parts[1];
+        
+        $todo_date = date("Y/m/d", strtotime($todo_date_str));
+
+        if ($todo_date < $today_date) {
+            $todo_over_list[] = array("title" => $todo_title, "date" => $todo_date);
+        } else {
+            $todo_upcoming_list[] = array("title" => $todo_title, "date" => $todo_date);
+        }
+    }
+    // ↑↑↑ 修正はここまで ↑↑↑
 }
 require_once("smarty/Smarty.class.php");
 $smarty = new Smarty(); // Smartyインスタンス ($smartyオブジェクト)を作成
